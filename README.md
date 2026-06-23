@@ -7,20 +7,50 @@ over SSH. Powered by [tinysend](https://tinysend.com).
 
 ## how it works
 
-```
-agent blocks ─▶ pane.agent_status_changed ─▶ notify.mjs reads the prompt,
-             emails you from your tinysend mailbox, remembers message-id → pane
-you reply (Gmail / Apple Mail) ─▶ tinysend mailbox receives it
-watch.mjs polls inbound ─▶ matches reply.in_reply_to to the pane
-             ─▶ pane.send_text + send_keys enter ─▶ agent unblocks
+```mermaid
+sequenceDiagram
+    participant A as Agent (pane)
+    participant P as plugin
+    participant M as tinysend mailbox
+    participant U as You (Mail app)
+
+    A->>P: pane.agent_status_changed (blocked)
+    P->>A: pane.read — capture the prompt
+    P->>M: send email · remember message-id → pane
+    M->>U: notification email
+    U->>M: reply with your answer
+    loop every few seconds
+        P->>M: poll inbound
+    end
+    M-->>P: reply · match in_reply_to → pane
+    P->>A: pane.send_text + send_keys enter
+    Note over A: agent unblocks
 ```
 
 The reply comes back by polling the mailbox (the herdr socket is local), so no
 inbound webhook or public URL is needed.
 
+## get your tinysend credentials
+
+You need three things from [tinysend](https://app.tinysend.com): a mailbox, a key
+for it, and your own email address.
+
+1. Create a mailbox — app.tinysend.com/mailboxes → New mailbox. Pick an address
+   like `you@tinysend.com` (or use your own domain). This is the account that
+   sends the alerts and catches your replies.
+2. Get `TINYSEND_MAILBOX_ID` — open the mailbox; its id (`mbx_...`) is in the URL,
+   `app.tinysend.com/mailboxes/<mbx_...>`.
+3. Get `TINYSEND_KEY` — on that mailbox's Settings tab, generate a mailbox-scoped
+   API key (`sk_mbx_...`). It's shown once; copy it. (Scoped to this mailbox, so
+   `from` defaults to it — the plugin only sends `to` + subject + body.)
+4. `NOTIFY_TO` is your own everyday inbox (Gmail, iCloud, work email) — where the
+   alert lands and the address you reply from. NOT the tinysend mailbox.
+
+`NOTIFY_ON` is just which agent statuses email you (`blocked,done,failed`).
+
 ## setup
 
-1. In tinysend, create a mailbox and a mailbox-scoped key (`sk_mbx_...`).
+1. Have your `sk_mbx_...` key, `mbx_...` id, and your inbox address ready (above).
 2. Install and configure:
 
 ```sh
