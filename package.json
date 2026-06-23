@@ -1,8 +1,22 @@
 {
   "name": "tinysend-herdr",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "herdr plugin: email yourself when an agent blocks/finishes, reply to unblock it (powered by tinysend)",
+  "description": "herdr plugin: email yourself when an agent blocks/finishes, reply to drive it (powered by tinysend)",
+  "license": "MIT",
+  "author": "system operator",
+  "homepage": "https://github.com/tiny-send/tinysend-herdr",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tiny-send/tinysend-herdr.git"
+  },
+  "keywords": [
+    "herdr",
+    "herdr-plugin",
+    "tinysend",
+    "ai-agents",
+    "email"
+  ],
   "type": "module",
   "dependencies": {
     "tinysend": "^0.5.1"
