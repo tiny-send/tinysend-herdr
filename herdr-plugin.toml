@@ -1,6 +1,6 @@
 id = "tinysend.herdr"
 name = "tinysend → herdr"
-version = "0.1.0"
+version = "0.2.0"
 min_herdr_version = "0.7.0"
 description = "Email yourself when an agent blocks, finishes, or fails — and reply to unblock it."
 platforms = ["linux", "macos"]
