@@ -1,0 +1,10 @@
+{
+  "name": "tinysend-herdr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "herdr plugin: email yourself when an agent blocks/finishes, reply to unblock it (powered by tinysend)",
+  "type": "module",
+  "dependencies": {
+    "tinysend": "^0.5.1"
+  }
+}

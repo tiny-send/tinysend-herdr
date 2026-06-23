@@ -1,0 +1,29 @@
+id = "tinysend.herdr"
+name = "tinysend → herdr"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Email yourself when an agent blocks, finishes, or fails — and reply to unblock it."
+platforms = ["linux", "macos"]
+
+# pulls the tinysend SDK at install time
+[[build]]
+command = ["npm", "install", "--omit=dev", "--no-audit", "--no-fund"]
+
+# outbound: fires on every agent status change; emails you on blocked/done/failed
+[[events]]
+on = "pane.agent_status_changed"
+command = ["node", "notify.mjs"]
+
+# inbound: a long-running pane that polls the mailbox for your replies and types
+# them into the blocked agent. open once with `herdr plugin pane open`.
+[[panes]]
+id = "watcher"
+title = "tinysend replies"
+placement = "split"
+command = ["node", "watch.mjs"]
+
+# mute/unmute notifications without uninstalling (bind to a key)
+[[actions]]
+id = "toggle"
+title = "Toggle tinysend notify"
+command = ["node", "toggle.mjs"]
