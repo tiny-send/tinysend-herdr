@@ -136,4 +136,6 @@ export async function paneRead(paneId, lines = 120) {
 }
 
 export const paneSendText = (paneId, text) => herdrCall('pane.send_text', { pane_id: paneId, text });
-export const paneSendKeys = (paneId, keys) => herdrCall('pane.send_keys', { pane_id: paneId, keys });
+// pane.send_keys requires keys as an ARRAY of key-combo strings; a bare string hangs.
+export const paneSendKeys = (paneId, keys) =>
+  herdrCall('pane.send_keys', { pane_id: paneId, keys: Array.isArray(keys) ? keys : [keys] });
