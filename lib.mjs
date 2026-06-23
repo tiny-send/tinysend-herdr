@@ -130,8 +130,8 @@ export async function paneRead(paneId, lines = 120) {
   if (!paneId) return '';
   try {
     const res = await herdrCall('pane.read', { pane_id: paneId, source: 'recent', lines });
-    // result shape isn't strictly specified; pull whatever text-ish field is present.
-    return (res?.text ?? res?.content ?? res?.lines?.join?.('\n') ?? '').toString().trim();
+    // herdr returns { type:'pane_read', read:{ text, ... } }
+    return (res?.read?.text ?? res?.text ?? '').toString();
   } catch { return ''; }
 }
 
