@@ -61,6 +61,8 @@ TINYSEND_KEY=sk_mbx_...
 TINYSEND_MAILBOX_ID=mbx_...
 NOTIFY_TO=you@example.com
 NOTIFY_ON=blocked,done,failed
+# only email once you've been away this long (idle/locked); 0 = always. macOS only.
+NOTIFY_AWAY_AFTER_MINUTES=30
 # optional — a real one-line LLM summary instead of a scrollback tail
 ANTHROPIC_API_KEY=sk-ant-...
 ```
@@ -73,6 +75,16 @@ herdr plugin pane open --plugin tinysend.herdr --entrypoint watcher
 
 Tip: connect the tinysend mailbox to Apple Mail (one-tap profile) to read and
 reply on your phone in the native Mail app.
+
+## away-only notifications
+
+By default you're only emailed once you've been away from the Mac for 30 minutes —
+no keyboard/mouse input or the screen is locked — so an agent that blocks while
+you're sitting there watching the pane doesn't ping you. Tune or disable it with
+`NOTIFY_AWAY_AFTER_MINUTES` (minutes; `0` = always email). Presence is read from
+`ioreg` (HID idle time + `CGSSessionScreenIsLocked`); on a non-macOS herdr host it
+can't be detected, so it always notifies. Note it's checked at the moment the
+status changes — if you walk away later, that already-fired event won't resend.
 
 ## mute
 

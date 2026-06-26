@@ -2,6 +2,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import net from 'node:net';
 import { Tinysend } from 'tinysend';
 
@@ -35,11 +36,42 @@ export function config() {
   const notifyTo = process.env.NOTIFY_TO?.trim();
   const notifyOn = (process.env.NOTIFY_ON || 'blocked,done,failed')
     .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-  return { key, mailboxId, notifyTo, notifyOn };
+  // only email once you've been away this long (idle/locked). default 30 min; 0 = always.
+  const awayRaw = process.env.NOTIFY_AWAY_AFTER_MINUTES?.trim();
+  const awayAfterMinutes = awayRaw === undefined || awayRaw === '' ? 30 : Math.max(0, Number(awayRaw) || 0);
+  return { key, mailboxId, notifyTo, notifyOn, awayAfterMinutes };
 }
 
 export function tinysend(key) {
   return new Tinysend(key);
+}
+
+// --- presence (macOS): are you actually at the Mac right now? ---
+// idleSeconds = time since last keyboard/mouse input; locked = screen is locked.
+// known=false when we can't tell (non-macOS herdr host, or the probes failed) —
+// callers must fail OPEN so a remote Linux host keeps notifying exactly as before.
+export function presence() {
+  if (process.platform !== 'darwin') return { idleSeconds: 0, locked: false, known: false };
+  let idleSeconds = 0, locked = false, known = false;
+  try {
+    const out = execFileSync('ioreg', ['-c', 'IOHIDSystem'], { encoding: 'utf8', timeout: 2000 });
+    const m = out.match(/"HIDIdleTime"\s*=\s*(\d+)/);
+    if (m) { idleSeconds = Number(m[1]) / 1e9; known = true; }
+  } catch {}
+  try {
+    const out = execFileSync('ioreg', ['-n', 'Root', '-d1'], { encoding: 'utf8', timeout: 2000 });
+    if (/"CGSSessionScreenIsLocked"\s*=\s*Yes/.test(out)) { locked = true; known = true; }
+  } catch {}
+  return { idleSeconds, locked, known };
+}
+
+// away = screen locked OR no input for `minutes`. minutes<=0 disables the gate.
+// When presence is unknowable, treat as away (fail open) — never silently drop an alert.
+export function isAway(minutes) {
+  if (!minutes || minutes <= 0) return true;
+  const p = presence();
+  if (!p.known) return true;
+  return p.locked || p.idleSeconds >= minutes * 60;
 }
 
 // --- mode state (enable/disable, a file the toggle action writes) ---

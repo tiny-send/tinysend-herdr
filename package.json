@@ -1,6 +1,6 @@
 {
   "name": "tinysend-herdr",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "herdr plugin: email yourself when an agent blocks/finishes, reply to drive it (powered by tinysend)",
   "license": "MIT",

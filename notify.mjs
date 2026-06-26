@@ -2,12 +2,12 @@
 // emails you a useful summary — what the agent is asking / just did (LLM one-liner
 // when ANTHROPIC_API_KEY is set, cleaned scrollback otherwise) and how to resume —
 // then remembers message-id -> pane so your reply routes back.
-import { loadDotEnv, config, modeEnabled, tinysend, paneRead, savePending } from './lib.mjs';
+import { loadDotEnv, config, modeEnabled, isAway, tinysend, paneRead, savePending } from './lib.mjs';
 
 loadDotEnv();
 if (!modeEnabled()) process.exit(0);
 
-const { key, mailboxId, notifyTo, notifyOn } = config();
+const { key, mailboxId, notifyTo, notifyOn, awayAfterMinutes } = config();
 if (!key || !mailboxId || !notifyTo) {
   console.error('missing TINYSEND_KEY / TINYSEND_MAILBOX_ID / NOTIFY_TO');
   process.exit(0);
@@ -18,6 +18,10 @@ const context = readJson('HERDR_PLUGIN_CONTEXT_JSON');
 
 const status = (event?.data?.agent_status ?? '').toString().toLowerCase();
 if (!status || !notifyOn.includes(status)) process.exit(0);
+
+// presence gate: when you're actively at the Mac, skip the email — you're watching
+// the pane anyway. only notify once you've been away (idle/locked). 0 = always notify.
+if (!isAway(awayAfterMinutes)) process.exit(0);
 
 const paneId = event?.data?.pane_id ?? context?.focused_pane_id ?? null;
 const agent = titleCase(event?.data?.agent ?? context?.focused_pane_agent ?? 'agent');
